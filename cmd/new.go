@@ -35,11 +35,6 @@ func CmdNew(dir string, tpls embed.FS) {
 	}
 	os.Mkdir(dir, 0777)
 
-	r, err := git.PlainInit(dir, false)
-	if err != nil {
-		log.Panic(err)
-	}
-
 	t, err := template.ParseFS(tpls, "templates/*")
 	if err != nil {
 		log.Panic(err)
@@ -59,11 +54,6 @@ func CmdNew(dir string, tpls embed.FS) {
 
 	t.ExecuteTemplate(f, "README.tmpl", templ)
 
-	w, err := r.Worktree()
-	if err != nil {
-		log.Panic(err)
-	}
-
 	err = os.Chdir(dir)
 	if err != nil {
 		log.Panic(err)
@@ -75,6 +65,16 @@ func CmdNew(dir string, tpls embed.FS) {
 		log.Panic(err)
 	}
 	err = os.Chdir("..")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	r, err := git.PlainInit(dir, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	w, err := r.Worktree()
 	if err != nil {
 		log.Panic(err)
 	}
