@@ -46,7 +46,7 @@ func doGit(dir string) error {
 		return err
 	}
 
-	filesToAdd := []string{"README.md", "main.go", "go.mod"}
+	filesToAdd := []string{"README.md", "main.go", "go.mod", ".gitignore"}
 	for _, fileToAdd := range filesToAdd {
 		_, err = w.Add(fileToAdd)
 		if err != nil {
@@ -118,6 +118,13 @@ func CmdNew(dir string, tpls embed.FS) {
 	}
 
 	t.ExecuteTemplate(f, "README.tmpl", templ)
+
+	f, err = os.Create(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	t.ExecuteTemplate(f, "gitignore.tmpl", templ)
 
 	err = os.Chdir(dir)
 	if err != nil {
