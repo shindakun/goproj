@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"text/template"
 	"time"
@@ -63,7 +64,22 @@ func CmdNew(dir string, tpls embed.FS) {
 		log.Panic(err)
 	}
 
-	files := []string{"README.md", "main.go"}
+	err = os.Chdir(dir)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	cmd := exec.Command("go", "mod", "init")
+	err = cmd.Run()
+	if err != nil {
+		log.Panic(err)
+	}
+	err = os.Chdir("..")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	files := []string{"README.md", "main.go", "go.mod"}
 	for _, v := range files {
 		_, err = w.Add(v)
 		if err != nil {
