@@ -2,6 +2,7 @@ package new
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -18,21 +19,85 @@ type temp struct {
 	Name string
 }
 
+// dirCheck checks for exisiting directory and return an error if so
+func dirCheck(dir string) error {
+	files, err := os.ReadDir(".")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() && file.Name() == dir {
+			return fmt.Errorf("dir already exisits")
+		}
+	}
+	return nil
+}
+
+// doGit does all of the Git related tasks, init, add, commit
+func doGit(dir string) error {
+	r, err := git.PlainInit(dir, false)
+	if err != nil {
+		return err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	filesToAdd := []string{"README.md", "main.go", "go.mod"}
+	for _, fileToAdd := range filesToAdd {
+		_, err = w.Add(fileToAdd)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = w.Commit("inital commit", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Steve Layton",
+			Email: "shindakun@users.noreply.github.com",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	headRef, err := r.Head()
+	if err != nil {
+		return err
+	}
+	ref := plumbing.NewHashReference("refs/heads/main", headRef.Hash())
+
+	err = r.Storer.SetReference(ref)
+	if err != nil {
+		return err
+	}
+
+	// err = w.Checkout(&git.CheckoutOptions{Branch: "main", Create: true, Force: true})
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
+
+	err = r.Storer.RemoveReference("refs/heads/master")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CmdNew(dir string, tpls embed.FS) {
 	templ := temp{
 		Name: dir,
 	}
 
-	d, err := os.ReadDir(".")
+	err := dirCheck(dir)
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
-	for _, dd := range d {
-		if dd.IsDir() && dd.Name() == dir {
-			log.Panic("dir already exisits")
-		}
-	}
 	os.Mkdir(dir, 0777)
 
 	t, err := template.ParseFS(tpls, "templates/*")
@@ -69,51 +134,7 @@ func CmdNew(dir string, tpls embed.FS) {
 		log.Panic(err)
 	}
 
-	r, err := git.PlainInit(dir, false)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	w, err := r.Worktree()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	files := []string{"README.md", "main.go", "go.mod"}
-	for _, v := range files {
-		_, err = w.Add(v)
-		if err != nil {
-			log.Panic(err)
-		}
-	}
-	_, err = w.Commit("inital commit", &git.CommitOptions{
-		Author: &object.Signature{
-			Name:  "Steve Layton",
-			Email: "shindakun@users.noreply.github.com",
-			When:  time.Now(),
-		},
-	})
-	if err != nil {
-		log.Panic(err)
-	}
-
-	headRef, err := r.Head()
-	if err != nil {
-		log.Panic(err)
-	}
-	ref := plumbing.NewHashReference("refs/heads/main", headRef.Hash())
-
-	err = r.Storer.SetReference(ref)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// err = w.Checkout(&git.CheckoutOptions{Branch: "main"})
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
-
-	err = r.Storer.RemoveReference("refs/heads/master")
+	err = doGit(dir)
 	if err != nil {
 		log.Panic(err)
 	}
