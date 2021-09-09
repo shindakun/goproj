@@ -75,10 +75,10 @@ func doGit(dir string) error {
 		return err
 	}
 
-	// err = w.Checkout(&git.CheckoutOptions{Branch: "main", Create: true, Force: true})
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
+	err = w.Checkout(&git.CheckoutOptions{Branch: "refs/heads/main"})
+	if err != nil {
+		log.Panic(err)
+	}
 
 	err = r.Storer.RemoveReference("refs/heads/master")
 	if err != nil {
