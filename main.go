@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"os"
 
 	new "github.com/shindakun/goproj/cmd"
@@ -10,20 +11,31 @@ import (
 //go:embed templates/*.tmpl
 var tpls embed.FS
 
+func usage() {
+	fmt.Printf(`
+Goproj will create a new Go project repo.
+
+Usage:
+
+	goproj new <directory name>
+	`)
+}
+
 func main() {
 
-	// goproj new {{directory}}
-
 	if len(os.Args) < 3 {
-		panic("usage instructions")
+		usage()
+		os.Exit(0)
 	}
 	switch cmd := os.Args[1]; cmd {
 	case "new":
 		dir := os.Args[2]
 		new.CmdNew(dir, tpls)
 	case "help":
-		panic("usage instructions")
+		usage()
+		os.Exit(0)
 	default:
-		panic("usage instructions")
+		usage()
+		os.Exit(0)
 	}
 }
